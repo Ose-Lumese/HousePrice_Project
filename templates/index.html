@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Predictor</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            padding: 40px 20px; 
+        }
+        .card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            width: 100%;
+            max-width: 600px; 
+        }
+        h2 { color: #1a73e8; text-align: center; margin-bottom: 25px; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+        }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-size: 13px; font-weight: 600; color: #5f6368; margin-bottom: 8px; }
+        input { 
+            padding: 12px; 
+            border: 1px solid #dadce0; 
+            border-radius: 8px; 
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        input:focus { border: 2px solid #1a73e8; }
+        button { 
+            width: 100%; 
+            background: #1a73e8; 
+            color: white; 
+            padding: 15px; 
+            border: none; 
+            margin-top: 30px; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover { background: #1557b0; }
+        #result-container { 
+            margin-top: 25px; 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center; 
+            display: none;
+            background: #e8f0fe;
+        }
+        #result-text { font-size: 22px; color: #174ea6; font-weight: bold; }
+        
+        /* Mobile friendly */
+        @media (max-width: 500px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🏠 House Price Predictor</h2>
+        <p style="text-align: center; color: #70757a; margin-top: -15px; margin-bottom: 25px; font-size: 14px;">
+            AI System based on Advanced Regression Techniques
+        </p>
+        
+        <div class="grid">
+            <div class="input-group">
+                <label>Overall Quality (1-10)</label>
+                <input type="number" id="OverallQual" placeholder="e.g. 7" min="1" max="10">
+            </div>
+            <div class="input-group">
+                <label>Living Area (sq ft)</label>
+                <input type="number" id="GrLivArea" placeholder="e.g. 1500">
+            </div>
+            <div class="input-group">
+                <label>Garage Capacity (Cars)</label>
+                <input type="number" id="GarageCars" placeholder="e.g. 2">
+            </div>
+            <div class="input-group">
+                <label>Full Bathrooms</label>
+                <input type="number" id="FullBath" placeholder="e.g. 2">
+            </div>
+            <div class="input-group">
+                <label>Year Built</label>
+                <input type="number" id="YearBuilt" placeholder="e.g. 2005">
+            </div>
+            <div class="input-group">
+                <label>Total Basement (sq ft)</label>
+                <input type="number" id="TotalBsmtSF" placeholder="e.g. 800">
+            </div>
+        </div>
+
+        <button onclick="sendData()">Get AI Prediction</button>
+
+        <div id="result-container">
+            <div style="font-size: 14px; color: #174ea6; margin-bottom: 5px;">Estimated Market Value</div>
+            <div id="result-text"></div>
+        </div>
+    </div>
+
+    <script>
+        async function sendData() {
+            const resultContainer = document.getElementById('result-container');
+            const resultText = document.getElementById('result-text');
+            
+            // Collect data into a JSON object
+            const data = {
+                OverallQual: document.getElementById('OverallQual').value,
+                GrLivArea: document.getElementById('GrLivArea').value,
+                GarageCars: document.getElementById('GarageCars').value,
+                FullBath: document.getElementById('FullBath').value,
+                YearBuilt: document.getElementById('YearBuilt').value,
+                TotalBsmtSF: document.getElementById('TotalBsmtSF').value
+            };
+
+            // Basic validation
+            if (Object.values(data).some(v => v === "")) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.price) {
+                    resultContainer.style.display = 'block';
+                    resultText.innerText = "$" + result.price.toLocaleString(undefined, {minimumFractionDigits: 2});
+                } else {
+                    alert("Error: " + result.error);
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                alert("Could not connect to the server.");
+            }
+        }
+    </script>
+</body>
+</html>
